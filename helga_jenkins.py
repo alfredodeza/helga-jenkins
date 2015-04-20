@@ -20,6 +20,7 @@ def health(conn, *args):
 
 
 def builds(conn, *args):
+    args = list(args)
     args.pop([0])  # get rid of the command
     name = args.pop([0])  # get rid of the name
     info = conn.get_job_info(name)
