@@ -34,12 +34,12 @@ def builds(conn, *args):
     }
 
     if args:  # we got asked for a specific one
-        keys = sub_commands.get(args[0]) or []
+        keys = [sub_commands.get(args[0])] or []
     else:
         keys = [
-            'last',
-            'ok',
-            'failed',
+            'lastBuild',
+            'lastSuccessfulBuild',
+            'lastFailedBuild',
         ]
 
     def split_name(name):
