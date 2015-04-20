@@ -20,8 +20,9 @@ def health(conn, *args):
 
 
 def builds(conn, *args):
-    args.pop([0]) # get rid of the command
-    info = conn.get_job_info(args.pop[1])
+    args.pop([0])  # get rid of the command
+    name = args.pop([0])  # get rid of the name
+    info = conn.get_job_info(name)
     sub_commands = {
         'last': 'lastBuild',
         'failed': 'lastFailedBuild',
@@ -30,7 +31,6 @@ def builds(conn, *args):
         'good': 'lastSuccessfulBuild',
         'pass': 'lastSuccessfulBuild',
     }
-
 
     if args:  # we got asked for a specific one
         keys = sub_commands.get(args[0]) or []
