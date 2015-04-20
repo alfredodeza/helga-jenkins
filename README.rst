@@ -44,3 +44,6 @@ you can configure a few general things like (listed with some defaults)::
   # credentials
   JENKINS_USERNAME = "alfredodeza"
   JENKINS_PASSWORD = "ElCapitano2"
+
+  # Jenkins url
+  JENKINS_URL = "http://jenkins.example.com"
