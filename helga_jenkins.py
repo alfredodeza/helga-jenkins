@@ -27,6 +27,7 @@ def builds(conn, *args):
     sub_commands = {
         'last': 'lastBuild',
         'failed': 'lastFailedBuild',
+        'bad': 'lastFailedBuild',
         'successful': 'lastSuccessfulBuild',
         'ok': 'lastSuccessfulBuild',
         'good': 'lastSuccessfulBuild',
