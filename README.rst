@@ -1,4 +1,4 @@
-An Ansible plugin for helga chat bot
+An Jenkins plugin for helga chat bot
 ====================================
 
 About
@@ -7,7 +7,7 @@ About
 Helga is a Python chat bot. Full documentation can be found at
 http://helga.readthedocs.org.
 
-This Ansible plugin allows Helga to run Ansible playbooks from IRC and return
+This Jenkins plugin allows Helga to run Jenkins playbooks from IRC and return
 information when they succeed or fail.
 For example::
 
