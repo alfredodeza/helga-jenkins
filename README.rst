@@ -1,5 +1,5 @@
-An Jenkins plugin for helga chat bot
-====================================
+A Jenkins plugin for helga chat bot
+===================================
 
 About
 -----
