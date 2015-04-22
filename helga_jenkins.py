@@ -1,6 +1,5 @@
 from helga.plugins import command
 from helga import log, settings
-from jenkinsapi.jenkins import Jenkins
 from jenkins import Jenkins
 
 logger = log.getLogger(__name__)
