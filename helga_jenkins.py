@@ -1,6 +1,6 @@
 from helga.plugins import command
 from helga import log, settings
-from jenkins import Jenkins
+from jenkins import Jenkins, JenkinsException
 
 logger = log.getLogger(__name__)
 
@@ -163,5 +163,5 @@ def helga_jenkins(client, channel, nick, message, cmd, args):
     sub_command = args[0]
     try:
         return sub_commands[sub_command](conn, *args)
-    except RuntimeError as error:
+    except (JenkinsException, RuntimeError) as error:
         return str(error)
