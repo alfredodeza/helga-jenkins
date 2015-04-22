@@ -57,21 +57,39 @@ def builds(conn, *args):
     ]
 
 
-def parse_args(args):
+def args_to_dict(args):
     """
     Translate args that may look like::
 
         ["command", "sub-command"]
 
     """
-    pass
+    params = {}
+    for item in args:
+        if '=' in item:
+            key, value = item.split('=')
+        else:
+            key, value = item, None
+        params[key] = value
+
+    return params
 
 
 def build(conn, *args):
     args = list(args)
     args.pop(0)  # get rid of the command
     name = get_name(conn, args.pop(0))
-    pass
+
+    next_build_number = conn.get_job_info(name)['nextBuildNumber']
+
+    params = args_to_dict(args)
+    conn.build_job(name, parameters=params, token=conn.password)
+
+    conn.get_build_info(name, next_build_number)
+    from time import sleep; sleep(1)
+
+    build_info = conn.get_build_info(name, next_build_number)
+    return '%s build started at: %s' % (name, build_info['url']),
 
 
 def get_name(conn, name):
