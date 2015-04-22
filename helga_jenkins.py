@@ -1,6 +1,7 @@
 from helga.plugins import command
 from helga import log, settings
-import jenkins
+from jenkinsapi.jenkins import Jenkins
+from jenkins import Jenkins
 
 logger = log.getLogger(__name__)
 
@@ -22,11 +23,7 @@ def health(conn, *args):
 def builds(conn, *args):
     args = list(args)
     args.pop(0)  # get rid of the command
-
-    # FIXME: need to call assert_job_exists()
-    # to get some validation done here instead of assuming
-    # input is right
-    name = args.pop(0)  # get rid of the name
+    name = get_name(conn, args.pop(0))
     info = conn.get_job_info(name)
     sub_commands = {
         'last': 'lastBuild',
@@ -67,16 +64,36 @@ def parse_args(args):
         ["command", "sub-command"]
 
     """
+    pass
+
 
 def build(conn, *args):
     args = list(args)
     args.pop(0)  # get rid of the command
-
-    # FIXME: need to call assert_job_exists()
-    # to get some validation done here instead of assuming
-    # input is right
-    name = args.pop(0)  # get rid of the name
+    name = get_name(conn, args.pop(0))
     pass
+
+
+def get_name(conn, name):
+    if conn.job_exists(name):
+        return name
+    raise RuntimeError('%s does not exist (or could not be found) in Jenkins' % name)
+
+
+def enable(conn, *args):
+    args = list(args)
+    args.pop(0)  # get rid of the command
+    name = get_name(conn, args.pop(0))
+    conn.enable_job(name)
+    return 'enabled job: %s' % name
+
+
+def disable(conn, *args):
+    args = list(args)
+    args.pop(0)  # get rid of the command
+    name = get_name(conn, args.pop(0))
+    conn.disable_job(name)
+    return 'disabled job: %s' % name
 
 
 def connect(nick):
@@ -99,12 +116,12 @@ def connect(nick):
     # favor user creds first, fallback to simple creds, and ultimately
     # fallback to None which is allowed
     user = user_auth.get('username', username)
-    pass_ = user_auth.get('password', username)
+    pass_ = user_auth.get('password', password)
 
-    return jenkins.Jenkins(
+    return Jenkins(
         url,
         username=user,
-        password=_pass,
+        password=pass_,
     )
 
 
@@ -122,7 +139,12 @@ def helga_jenkins(client, channel, nick, message, cmd, args):
         #'health': health,
         'builds': builds,
         'build': build,
+        'enable': enable,
+        'disable': disable,
     }
 
     sub_command = args[0]
-    return sub_commands[sub_command](conn, *args)
+    try:
+        return sub_commands[sub_command](conn, *args)
+    except RuntimeError as error:
+        return str(error)
