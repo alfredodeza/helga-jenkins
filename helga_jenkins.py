@@ -128,12 +128,12 @@ def connect(nick):
     username = getattr(settings, 'JENKINS_USERNAME', None)
     password = getattr(settings, 'JENKINS_PASSWORD', None)
     credentials = getattr(settings, 'JENKINS_CREDENTIALS', {})
-    user_auth = credentials.get(nick)
+    user_auth = credentials.get(nick, {})
 
     # favor user creds first, fallback to simple creds, and ultimately
     # fallback to None which is allowed
     user = user_auth.get('username', username)
-    pass_ = user_auth.get('password', password)
+    pass_ = user_auth.get('token', password)
 
     connection = Jenkins(
         url,
