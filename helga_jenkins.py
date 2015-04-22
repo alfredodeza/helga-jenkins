@@ -135,11 +135,13 @@ def connect(nick):
     user = user_auth.get('username', username)
     pass_ = user_auth.get('password', password)
 
-    return Jenkins(
+    connection = Jenkins(
         url,
         username=user,
         password=pass_,
     )
+    connection.password = pass_
+    return connection
 
 
 @command('jenkins', aliases=['ci'], help='control jenkins', priority=0)
@@ -165,3 +167,5 @@ def helga_jenkins(client, channel, nick, message, cmd, args):
         return sub_commands[sub_command](conn, *args)
     except (JenkinsException, RuntimeError) as error:
         return str(error)
+    except KeyError:
+        return '%s is not a command, valid ones are: %s' % (sub_command, str(sub_commands.keys()))
