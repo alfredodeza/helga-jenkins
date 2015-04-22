@@ -41,9 +41,20 @@ Configuration
 In your ``settings.py`` file (or whatever you pass to ``helga --settings``),
 you can configure a few general things like (listed with some defaults)::
 
-  # credentials
+  # simple authentication
   JENKINS_USERNAME = "alfredodeza"
   JENKINS_PASSWORD = "ElCapitano2"
 
   # Jenkins url
   JENKINS_URL = "http://jenkins.example.com"
+
+  # for multiple auth/tokens, define a 'credentials' dictionary
+  JENKINS_CREDENTIALS = {
+    "alfredodeza": {
+      "username": "adeza",
+      "token": "33b3ffadgg3v61g1bfd6fd8543df50e4",
+    }
+  }
+
+For multiple users, it is useful to map IRC nicks to usernames in Jenkins,
+allowing a user to have different usernames (often the case).
