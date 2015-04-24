@@ -15,11 +15,23 @@ def jobs(conn, *args):
 
 
 def health(conn, *args):
-    info = conn.get_job_info(args[1])
+    """
+    Get a report of the health of a given build. Example usage::
+        !ci health {job}
+    """
+    args = list(args)
+    args.pop(0)  # get rid of the command
+    name = get_name(conn, args.pop(0))
+    info = conn.get_job_info(name)
     return info['healthReport'][0]['description']
 
 
 def builds(conn, *args):
+    """
+    Get the status of builds for a given job. Defaults to last, failed, and good builds. Example usage::
+        !ci builds {job}
+        !ci builds {job} (ok|bad|last)
+    """
     args = list(args)
     args.pop(0)  # get rid of the command
     name = get_name(conn, args.pop(0))
@@ -80,6 +92,10 @@ def args_to_dict(args):
 
 
 def build(conn, *args):
+    """
+    Trigger a build in Jenkins. Authentication is probably required. Example usage::
+        !ci build {job} BRANCH=master RELEASE=True
+    """
     args = list(args)
     args.pop(0)  # get rid of the command
     name = get_name(conn, args.pop(0))
@@ -103,6 +119,10 @@ def get_name(conn, name):
 
 
 def enable(conn, *args):
+    """
+    Enable a job that is currently disabled. Example usage::
+        !ci enable {job}
+    """
     args = list(args)
     args.pop(0)  # get rid of the command
     name = get_name(conn, args.pop(0))
@@ -111,6 +131,10 @@ def enable(conn, *args):
 
 
 def disable(conn, *args):
+    """
+    Disable a job that is currently enabled. Example usage::
+        !ci disable {job}
+    """
     args = list(args)
     args.pop(0)  # get rid of the command
     name = get_name(conn, args.pop(0))
@@ -160,7 +184,7 @@ def helga_jenkins(client, channel, nick, message, cmd, args):
         # XXX commented out because they need trimming
         #'status': status,
         #'jobs': jobs,
-        #'health': health,
+        'health': health,
         'builds': builds,
         'build': build,
         'enable': enable,
