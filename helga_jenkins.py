@@ -192,7 +192,7 @@ def helga_jenkins(client, channel, nick, message, cmd, args):
     }
 
     sub_command = args[0]
-    if len(args) == 1:
+    if len(args) == 1 and 'help' not in args:
         return 'need more arguments for sub command: %s' % sub_command
     try:
         return sub_commands[sub_command](conn, *args)
