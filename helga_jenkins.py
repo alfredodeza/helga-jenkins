@@ -51,8 +51,13 @@ def builds(conn, *args):
             title.append(ch)
         return ''.join(title)
 
+    def build_info(info, key):
+        if info[key] is None:
+            return 'there are no "%s" recorded for this job' % split_name(key)
+        return '%s: %s' % (split_name(key), info[key]['url'])
+
     return [
-        '%s: %s' % (split_name(i), info[i]['url']) for i in keys
+        '%s' % build_info(info, key) for key in keys
     ]
 
 
