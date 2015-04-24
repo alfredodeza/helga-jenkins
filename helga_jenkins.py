@@ -200,9 +200,9 @@ def helga_jenkins(client, channel, nick, message, cmd, args):
         return str(error)
     except KeyError:
         if sub_command == 'help':
-            if args:  # we got asked for a specific command:
+            if len(args) > 1:  # we got asked for a specific command:
                 try:
-                    func = sub_commands[args[0]]
+                    func = sub_commands[args[1]]
                 except KeyError:
                     return '%s is not a command, valid ones are: %s' % (sub_command, str(sub_commands.keys()))
                 return [i.strip() for i in func.__doc__.strip().split('\n')]
