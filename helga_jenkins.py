@@ -168,9 +168,18 @@ def helga_jenkins(client, channel, nick, message, cmd, args):
     }
 
     sub_command = args[0]
+    if len(args) == 1:
+        return 'need more arguments for sub command: %s' % sub_command
     try:
         return sub_commands[sub_command](conn, *args)
     except (JenkinsException, RuntimeError) as error:
         return str(error)
     except KeyError:
+        if sub_command == 'help':
+            if args:  # we got asked for a specific command:
+                try:
+                    func = sub_commands[args[0]]
+                except KeyError:
+                    return '%s is not a command, valid ones are: %s' % (sub_command, str(sub_commands.keys()))
+                return [i.strip() for i in func.__doc__.strip().split('\n')]
         return '%s is not a command, valid ones are: %s' % (sub_command, str(sub_commands.keys()))
