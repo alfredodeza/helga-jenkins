@@ -58,3 +58,19 @@ you can configure a few general things like (listed with some defaults)::
 
 For multiple users, it is useful to map IRC nicks to usernames in Jenkins,
 allowing a user to have different usernames (often the case).
+
+sub commands
+------------
+There are a few commands that are allowed, you can trigger their exampe usage
+at any time with::
+
+    !ci help {command}
+
+This is a list of all the available ones with a short description of what they
+do (most of them will require a job name argument at the very least):
+
+* `enable`:  Enable a disabled job.
+* `disable`: Disable an enabled job.
+* `build`: Trigger a job build, will probably need authentication.
+* `health`: Report on the current health of a job.
+* `builds`: Report on the last builds of a job
