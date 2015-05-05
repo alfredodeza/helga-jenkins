@@ -173,7 +173,7 @@ def connect(nick):
     return connection
 
 
-@command('jenkins', aliases=['ci'], help='control jenkins', priority=0)
+@command('jenkins', aliases=['ci'], help='Control Jenkins. See !jenkins help (or !ci help)', priority=0)
 def helga_jenkins(client, channel, nick, message, cmd, args):
     try:
         conn = connect(nick)
