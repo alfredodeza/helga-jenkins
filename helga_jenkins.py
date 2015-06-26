@@ -4,6 +4,11 @@ from jenkins import Jenkins, JenkinsException
 
 logger = log.getLogger(__name__)
 
+def get_jenkins_url(settings):
+    url = getattr(settings, 'JENKINS_URL', None)
+    if not url:
+        raise RuntimeError('no JENKINS_URL is configured, cannot continue')
+    return url
 
 def status(conn, name, *args):
     logger.debug('user requested name: %s' % name)
@@ -151,9 +156,7 @@ def connect(nick):
     If no authentication is configured, just a connection is returned with no
     authentication (probably read-only, depending on Jenkins settings)
     """
-    url = getattr(settings, 'JENKINS_URL')
-    if not url:
-        raise RuntimeError('no JENKINS_URL is configured, cannot continue')
+    url = get_jenkins_url(settings)
     username = getattr(settings, 'JENKINS_USERNAME', None)
     password = getattr(settings, 'JENKINS_PASSWORD', None)
     credentials = getattr(settings, 'JENKINS_CREDENTIALS', {})
