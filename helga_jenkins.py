@@ -1,8 +1,10 @@
-from helga.plugins import command
+from twisted.internet import reactor
+from helga.plugins import command, ResponseNotReady
 from helga import log, settings
 from jenkins import Jenkins, JenkinsException
 
 logger = log.getLogger(__name__)
+
 
 def get_jenkins_url(settings):
     url = getattr(settings, 'JENKINS_URL', None)
@@ -10,16 +12,17 @@ def get_jenkins_url(settings):
         raise RuntimeError('no JENKINS_URL is configured, cannot continue')
     return url
 
-def status(conn, name, *args):
+
+def status(conn, name, *args, **kw):
     logger.debug('user requested name: %s' % name)
     return conn.get_job_info(name)
 
 
-def jobs(conn, *args):
+def jobs(conn, *args, **kw):
     return conn.get_jobs()
 
 
-def health(conn, *args):
+def health(conn, *args, **kw):
     """
     Get a report of the health of a given build. Example usage::
         !ci health {job}
@@ -31,7 +34,7 @@ def health(conn, *args):
     return info['healthReport'][0]['description']
 
 
-def builds(conn, *args):
+def builds(conn, *args, **kw):
     """
     Get the status of builds for a given job. Defaults to last, failed, and good builds. Example usage::
         !ci builds {job}
@@ -96,25 +99,44 @@ def args_to_dict(args):
     return params
 
 
-def build(conn, *args):
+def async_build_info(jenkins_conn, name, next_build_number, client=None, channel=None, nick=None):
+    build_info = jenkins_conn.get_build_info(name, next_build_number)
+    msg = '%s: %s build started at: %s' % (name, build_info['url'])
+    client.msg(channel, msg)
+
+
+def build(jenkins_conn, *args, **kw):
     """
     Trigger a build in Jenkins. Authentication is probably required. Example usage::
         !ci build {job} BRANCH=master RELEASE=True
     """
+    # blow up if we don't have these
+    client = kw['client']
+    channel = kw['channel']
+    nick = kw['nick']
+
     args = list(args)
     args.pop(0)  # get rid of the command
-    name = get_name(conn, args.pop(0))
+    name = get_name(jenkins_conn, args.pop(0))
 
-    next_build_number = conn.get_job_info(name)['nextBuildNumber']
+    next_build_number = jenkins_conn.get_job_info(name)['nextBuildNumber']
 
     params = args_to_dict(args)
-    conn.build_job(name, parameters=params, token=conn.password)
+    jenkins_conn.build_job(name, parameters=params, token=jenkins_conn.password)
 
-    conn.get_build_info(name, next_build_number)
-    from time import sleep; sleep(1)
-
-    build_info = conn.get_build_info(name, next_build_number)
-    return '%s build started at: %s' % (name, build_info['url']),
+    # we need to wait for a little while before jenkins gets out of the silent
+    # period so that we can ask for information about the build.
+    reactor.callLater(
+        10,
+        async_build_info,
+        jenkins_conn,
+        name,
+        next_build_number,
+        client=client,
+        channel=channel,
+        nick=nick
+    )
+    raise ResponseNotReady
 
 
 def get_name(conn, name):
@@ -123,7 +145,7 @@ def get_name(conn, name):
     raise RuntimeError('%s does not exist (or could not be found) in Jenkins' % name)
 
 
-def enable(conn, *args):
+def enable(conn, *args, **kw):
     """
     Enable a job that is currently disabled. Example usage::
         !ci enable {job}
@@ -135,7 +157,7 @@ def enable(conn, *args):
     return 'enabled job: %s' % name
 
 
-def disable(conn, *args):
+def disable(conn, *args, **kw):
     """
     Disable a job that is currently enabled. Example usage::
         !ci disable {job}
@@ -198,7 +220,7 @@ def helga_jenkins(client, channel, nick, message, cmd, args):
     if len(args) == 1 and 'help' not in args:
         return 'need more arguments for sub command: %s' % sub_command
     try:
-        return sub_commands[sub_command](conn, *args)
+        return sub_commands[sub_command](conn, *args, client=client, channel=channel, nick=nick)
     except (JenkinsException, RuntimeError) as error:
         return str(error)
     except KeyError:
