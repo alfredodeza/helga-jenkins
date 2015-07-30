@@ -101,7 +101,7 @@ def args_to_dict(args):
 
 def async_build_info(jenkins_conn, name, next_build_number, client=None, channel=None, nick=None):
     build_info = jenkins_conn.get_build_info(name, next_build_number)
-    msg = '%s: %s build started at: %s' % (name, build_info['url'])
+    msg = '%s: %s build started at: %s' % (nick, name, build_info['url'])
     client.msg(channel, msg)
 
 
