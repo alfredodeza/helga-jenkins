@@ -46,6 +46,37 @@ def status(conn, *args, **kw):
     return msg
 
 
+def async_status(conn, name, build_number, client=None, channel=None, nick=None):
+    """
+    an async status is meant to poll the jenkins server and just report back
+    if the build is no longer running.
+    """
+    info = conn.get_build_info(name, build_number)
+
+    if info['building']:
+        # it is currently building so return a corresponding message
+        reactor.callLater(
+            60,
+            async_status,
+            conn,
+            name,
+            build_number,
+            client=client,
+            channel=channel,
+            nick=nick
+        )
+
+    else:
+        msg = '%s %s for %s on server: %s url: %s' % (
+            nick,
+            str(info['result']).upper(),
+            name,
+            info['builtOn'],
+            info['url']
+        )
+        client.msg(channel, msg)
+
+
 def health(conn, *args, **kw):
     """
     Get a report of the health of a given build. Example usage::
@@ -160,6 +191,19 @@ def build(jenkins_conn, *args, **kw):
         channel=channel,
         nick=nick
     )
+    # now we also need to set a recurring check for the build so that when it
+    # completes the user will get pinged about it.
+    reactor.callLater(
+        60,
+        async_status,
+        jenkins_conn,
+        name,
+        next_build_number,
+        client=client,
+        channel=channel,
+        nick=nick
+    )
+
     raise ResponseNotReady
 
 
