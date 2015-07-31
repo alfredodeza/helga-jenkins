@@ -1,7 +1,7 @@
 from twisted.internet import reactor
 from helga.plugins import command, ResponseNotReady
 from helga import log, settings
-from jenkins import Jenkins, JenkinsException
+from jenkins import Jenkins, JenkinsException, NotFoundException
 
 logger = log.getLogger(__name__)
 
@@ -13,13 +13,37 @@ def get_jenkins_url(settings):
     return url
 
 
-def status(conn, name, *args, **kw):
-    logger.debug('user requested name: %s' % name)
-    return conn.get_job_info(name)
-
-
 def jobs(conn, *args, **kw):
     return conn.get_jobs()
+
+
+def status(conn, *args, **kw):
+    args = list(args)
+    args.pop(0)  # get rid of the command
+    name = get_name(conn, args.pop(0))
+    # get build number of last build
+    build_number = conn.get_job_info(name)['nextBuildNumber']
+    try:
+        info = conn.get_build_info(name, build_number)
+    except NotFoundException:
+        # use the previous one
+        info = conn.get_build_info(name, build_number-1)
+    if info['building']:
+        # it is currently building so return a corresponding message
+        msg = 'BUILDING %s on server: %s url: %s' % (
+            name,
+            info['builtOn'],
+            info['url']
+        )
+    else:
+        msg = '%s for %s on server: %s url: %s' % (
+            str(info['result']).upper(),
+            name,
+            info['builtOn'],
+            info['url']
+        )
+
+    return msg
 
 
 def health(conn, *args, **kw):
@@ -209,6 +233,7 @@ def helga_jenkins(client, channel, nick, message, cmd, args):
         # XXX commented out because they need trimming
         #'status': status,
         #'jobs': jobs,
+        'status': status,
         'health': health,
         'builds': builds,
         'build': build,
