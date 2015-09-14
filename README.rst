@@ -37,9 +37,16 @@ you are running Helga, clone a copy of this repository from GitHub and run
 ``python setup.py develop``.
 
 Configuration
--------------
+=============
 In your ``settings.py`` file (or whatever you pass to ``helga --settings``),
-you can configure a few general things like (listed with some defaults)::
+you can configure a few general things like credentials and Jenkins locations.
+
+In most cases, the plugin will only be configured for a single Jenkins
+instance, but there is support for multiple instances if configured to do so.
+
+Single Instance
+---------------
+A single instance can be configured as follows (listed with some defaults)::
 
   # simple authentication
   JENKINS_USERNAME = "alfredodeza"
@@ -58,6 +65,38 @@ you can configure a few general things like (listed with some defaults)::
 
 For multiple users, it is useful to map IRC nicks to usernames in Jenkins,
 allowing a user to have different usernames (often the case).
+
+Multiple Instances
+------------------
+For multiple instances, it is required to have defined a key that holds the
+information for connections and users::
+
+  # Multiple Jenkins
+  MULTI_JENKINS = {
+    "test": {
+        'url': 'http://test_jenkins.example.com',
+        'credentials': {
+          "username": "adeza",
+          "token": "33b3ffadgg3v61g1bfd6fd8543df50e4",
+        },
+    "prod": {
+        'url': 'http://test_jenkins.example.com',
+        'username': 'admin',
+        'password': 'secret',
+  }
+
+Note that each key in ``MULTI_JENKINS`` will equate to a supported command when
+invoking it on IRC, for example::
+
+  <alfredodeza> !ci test build test-job
+
+Where *test* is a configured Jenkins instance. Or::
+
+  <alfredodeza> !ci prod build other-job
+
+Either ``credentials`` or ``username`` and ``password`` must exist, the bot
+will fallback from one to the other depending on what is defined and available
+to connect.
 
 sub commands
 ------------
