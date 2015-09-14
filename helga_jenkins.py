@@ -295,7 +295,10 @@ def helga_jenkins(client, channel, nick, message, cmd, args):
     except KeyError:
         if sub_command == 'help':
             if len(args) == 1:  # we just got 'help' so give a few examples of how to use it
-                return "'help' is available for subcommands. For example: !ci help health. Available: %s" % str(sub_commands.keys())
+                return (
+                    "help is available for subcommands: %s." % ' '.join(sub_commands.keys()),
+                    "subcommand help can be requested with: !ci help {subcommand}"
+                )
             if len(args) > 1:  # we got asked for a specific command:
                 try:
                     func = sub_commands[args[1]]
