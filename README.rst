@@ -74,12 +74,21 @@ information for connections and users::
   # Multiple Jenkins
   MULTI_JENKINS = {
     "test": {
+        # URL is always required
         'url': 'http://test_jenkins.example.com',
         'credentials': {
-          "username": "adeza",
-          "token": "33b3ffadgg3v61g1bfd6fd8543df50e4",
+          "alfredodeza": {
+              "username": "adeza",
+              "token": "33b3ffadgg3v61g1bfd6fd8543df50e4",
+          },
+          "ktdreyer": {
+            "username": "kdreyer",
+            "token": "44bh4gggg3dkjasdweiuhr780wer234ss",
+          }
         },
     "prod": {
+        # if no credentials per-user is supplied, define a global one that
+        # any user can use
         'url': 'http://test_jenkins.example.com',
         'username': 'admin',
         'password': 'secret',
@@ -94,9 +103,9 @@ Where *test* is a configured Jenkins instance. Or::
 
   <alfredodeza> !ci prod build other-job
 
-Either ``credentials`` or ``username`` and ``password`` must exist, the bot
-will fallback from one to the other depending on what is defined and available
-to connect.
+Either ``credentials`` (with IRC nicks as keys, as username and tokens) or
+``username`` and ``password`` must exist, the bot will fallback from one to the
+other depending on what is defined and available to connect.
 
 sub commands
 ------------
