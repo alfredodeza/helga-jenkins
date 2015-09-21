@@ -237,7 +237,7 @@ def disable(conn, *args, **kw):
     return 'disabled job: %s' % name
 
 
-def connect(nick):
+def connect(credentials):
     """
     Since a user can have simple authentication with a single user/password or
     define a set of IRC nick to Jenkin's users with API tokens, this helper
@@ -246,44 +246,124 @@ def connect(nick):
     If no authentication is configured, just a connection is returned with no
     authentication (probably read-only, depending on Jenkins settings)
     """
-    url = get_jenkins_url(settings)
-    username = getattr(settings, 'JENKINS_USERNAME', None)
-    password = getattr(settings, 'JENKINS_PASSWORD', None)
-    credentials = getattr(settings, 'JENKINS_CREDENTIALS', {})
-    user_auth = credentials.get(nick, {})
-
-    # favor user creds first, fallback to simple creds, and ultimately
-    # fallback to None which is allowed
-    user = user_auth.get('username', username)
-    pass_ = user_auth.get('token', password)
-
     connection = Jenkins(
-        url,
-        username=user,
-        password=pass_,
+        credentials['url'],
+        username=credentials['user'],
+        password=credentials['password'],
     )
-    connection.password = pass_
+    connection.password = credentials['password']
     return connection
+
+
+sub_commands = {
+    'status': status,
+    'health': health,
+    'builds': builds,
+    'build': build,
+    'enable': enable,
+    'disable': disable,
+}
+
+
+def parse_instance(arguments):
+    multi = getattr(settings, 'MULTI_JENKINS', None)
+    if multi:
+        instance = arguments[0]
+        if instance in multi.keys():
+            return instance
+    return None
+
+
+def parse_credentials(nick, arguments, instance=None):
+    """
+    A trivial helper to make sense of the arguments passed in, validate them,
+    and error accordingly if information is missing or erroneous
+
+    Returns a dictionary with the mappings necessary to operate throughout the
+    plugin.
+
+    ``args`` is a list of arguments after the name of the plugin. For example::
+
+        !ci build job
+
+    Would get this function: ``['build', 'job']``
+    """
+    parsed = {}
+    # First, look if we have ``MULTI_JENKINS`` set so that we can prioritize that
+    multi = getattr(settings, 'MULTI_JENKINS', None)
+    if multi:
+        # make sure that configured instances will not collide with supported
+        # sub-commands
+        for k in multi.keys():
+            if k in sub_commands.keys():
+                raise RuntimeError(
+                    "A configured Jenkins instance ('%s') has the same name as \
+                    a sub-command. This is not allowed, that instance needs to \
+                    be renamed." % k
+                )
+        # If we didn't raise it means that we should check if the first argument
+        # is a configured Jenkins instance before continuing
+        if arguments[0] in multi.keys():
+            instance = arguments[0]
+            try:
+                parsed['url'] = multi[instance]['url']
+            except KeyError:
+                raise RuntimeError('"url" is a required key for Jenkins instance "%s"' % instance)
+
+            # per-nick credentials first
+            credentials = multi[instance].get('credentials', {})
+            user_auth = credentials.get(nick, {})
+            username = user_auth.get('username')
+            password = user_auth.get('token')
+
+            if not username:
+                # fallback to regular user creds
+                username = multi[instance].get('username')
+                password = multi[instance].get('password')
+
+            parsed['username'] = username
+            parsed['password'] = password
+
+    else:
+        parsed['url'] = get_jenkins_url(settings)
+        username = getattr(settings, 'JENKINS_USERNAME', None)
+        password = getattr(settings, 'JENKINS_PASSWORD', None)
+        credentials = getattr(settings, 'JENKINS_CREDENTIALS', {})
+        user_auth = credentials.get(nick, {})
+
+        # favor user creds first, fallback to simple creds, and ultimately
+        # fallback to None which is allowed
+        user = user_auth.get('username')
+        token = user_auth.get('token')
+        if user and token:
+            username = user
+            password = token
+
+        parsed['username'] = username
+        parsed['password'] = password
+
+    try:
+        for k in ['username', 'password', 'url']:
+            if parsed[k] is None:
+                raise KeyError(k)
+    except KeyError as missing_key:
+        if instance:
+            msg = 'Unable to connect to %s, missing credential config key: %s' % (instance, missing_key)
+        else:
+            msg = 'Unable to connect, missing credential config key: %s' % (missing_key)
+        raise RuntimeError(msg)
+
+    return parsed
 
 
 @command('jenkins', aliases=['ci'], help='Control Jenkins. See !jenkins help (or !ci help)', priority=0)
 def helga_jenkins(client, channel, nick, message, cmd, args):
+    instance = parse_instance(args)
+    credentials = parse_credentials(nick, args, instance)
     try:
-        conn = connect(nick)
+        conn = connect(credentials)
     except RuntimeError as error:
         return str(error)
-
-    sub_commands = {
-        # XXX commented out because they need trimming
-        #'status': status,
-        #'jobs': jobs,
-        'status': status,
-        'health': health,
-        'builds': builds,
-        'build': build,
-        'enable': enable,
-        'disable': disable,
-    }
 
     sub_command = args[0]
     if len(args) == 1 and 'help' not in args:
