@@ -248,7 +248,7 @@ def connect(credentials):
     """
     connection = Jenkins(
         credentials['url'],
-        username=credentials['user'],
+        username=credentials['username'],
         password=credentials['password'],
     )
     connection.password = credentials['password']
