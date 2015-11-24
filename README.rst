@@ -27,7 +27,7 @@ Successful runs will also report back to the user::
 Installation
 ------------
 This Jenkins plugin is `available from PyPI
-<https://pypi.python.org/pypi/helga-jenkins`_, so you can simply install it
+<https://pypi.python.org/pypi/helga-jenkins>`_, so you can simply install it
 with ``pip``::
 
   pip install helga-jenkins
