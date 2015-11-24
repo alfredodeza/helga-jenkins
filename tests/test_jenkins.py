@@ -154,3 +154,17 @@ class TestParseCredentials(object):
         assert result['username'] == 'admin'
         assert result['password'] == 'secret'
 
+
+class TestJobIsParametrized(object):
+
+    def test_no_actions(self):
+        job_config = {}
+        assert helga_jenkins.job_is_parametrized(job_config) is False
+
+    def test_has_parameter_definitions(self):
+        job_config = {'actions': [{}, {u'parameterDefinitions': [{u'defaultParameterValue': {u'value': u''},
+               u'description': u'The git branch (or tag) to build',
+                  u'name': u'BRANCH',
+                     u'type': u'StringParameterDefinition'}]}, {}]}
+
+        assert helga_jenkins.job_is_parametrized(job_config) is True
