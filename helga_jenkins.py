@@ -13,6 +13,25 @@ def get_jenkins_url(settings):
     return url
 
 
+def job_is_parametrized(job_config):
+    """
+    If a job is parametrized but no arguments are passed in, then
+    python-jenkins will use a different URL to trigger the job (vs. using the
+    url that indicates the job is parametrized) causing builds to error and not
+    get started.
+
+    This check helps by looking into the job_config to determine if the job is
+    in fact parametrized so that we can add a bogus param and trick
+    python-jenkins in using the correct URL
+    """
+    actions = job_config.get('actions', [])
+    if not actions:
+        return False
+    for action in actions:
+        if action.get('parameterDefinitions'):
+            return True
+
+
 def jobs(conn, *args, **kw):
     return conn.get_jobs()
 
