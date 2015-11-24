@@ -370,7 +370,7 @@ def helga_jenkins(client, channel, nick, message, cmd, args):
         return 'need more arguments for sub command: %s' % sub_command
     try:
         return sub_commands[sub_command](conn, *args, client=client, channel=channel, nick=nick)
-    except (JenkinsException, RuntimeError) as error:
+    except (JenkinsException, HTTPError, RuntimeError) as error:
         return str(error)
     except KeyError:
         if sub_command == 'help':
