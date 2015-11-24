@@ -203,7 +203,7 @@ def build(jenkins_conn, *args, **kw):
     args = list(args)
     args.pop(0)  # get rid of the command
     name = get_name(jenkins_conn, args.pop(0))
-    info = conn.get_job_info(name)
+    info = jenkins_conn.get_job_info(name)
 
     next_build_number = info['nextBuildNumber']
 
