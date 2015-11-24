@@ -13,7 +13,7 @@ def get_jenkins_url(settings):
     return url
 
 
-def job_is_parametrized(job_config):
+def job_is_parametrized(job_info):
     """
     If a job is parametrized but no arguments are passed in, then
     python-jenkins will use a different URL to trigger the job (vs. using the
@@ -24,7 +24,7 @@ def job_is_parametrized(job_config):
     in fact parametrized so that we can add a bogus param and trick
     python-jenkins in using the correct URL
     """
-    actions = job_config.get('actions', [])
+    actions = job_info.get('actions', [])
     if not actions:
         return False
     for action in actions:
@@ -118,6 +118,7 @@ def builds(conn, *args, **kw):
     args.pop(0)  # get rid of the command
     name = get_name(conn, args.pop(0))
     info = conn.get_job_info(name)
+
     sub_commands = {
         'last': 'lastBuild',
         'failed': 'lastFailedBuild',
@@ -155,14 +156,24 @@ def builds(conn, *args, **kw):
     ]
 
 
-def args_to_dict(args):
+def args_to_dict(args, add_bogus=False):
     """
     Translate args that may look like::
 
-        ["command", "sub-command"]
+        ["command", "sub-command", "FORCE=True"]
+
+    Into:
+
+        {'FORCE': 'True'}
+
+    Optionally it adds a bogus key so that python-jenkins
+    can use the right parametrized url
 
     """
     params = {}
+    if add_bogus:
+        params['__bogus_param__'] = "1"
+
     for item in args:
         if '=' in item:
             key, value = item.split('=')
@@ -192,10 +203,11 @@ def build(jenkins_conn, *args, **kw):
     args = list(args)
     args.pop(0)  # get rid of the command
     name = get_name(jenkins_conn, args.pop(0))
+    info = conn.get_job_info(name)
 
-    next_build_number = jenkins_conn.get_job_info(name)['nextBuildNumber']
+    next_build_number = info['nextBuildNumber']
 
-    params = args_to_dict(args)
+    params = args_to_dict(args, add_bogus=job_is_parametrized(info))
     jenkins_conn.build_job(name, parameters=params, token=jenkins_conn.password)
 
     # we need to wait for a little while before jenkins gets out of the silent
