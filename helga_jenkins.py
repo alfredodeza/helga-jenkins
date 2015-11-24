@@ -2,6 +2,7 @@ from twisted.internet import reactor
 from helga.plugins import command, ResponseNotReady
 from helga import log, settings
 from jenkins import Jenkins, JenkinsException, NotFoundException
+from urllib2 import HTTPError
 
 logger = log.getLogger(__name__)
 
