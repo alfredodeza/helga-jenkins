@@ -66,10 +66,11 @@ def get_job_params(build_info):
     """
     actions = build_info.get('actions', [])
     param_items = [i for i in actions if 'parameters' in i] or [{}]
-    params = param_items[0].get('parameters', [{}])[0]
-    if params:
-        return ' '.join(["%s=%s" % (k, v) for k, v in params.items()])
-    return ''
+    params = param_items[0].get('parameters', [])
+    param_string = ''
+    for p in params:
+        param_string += '%s=%s ' % (p['name'], p['value'])
+    return param_string
 
 
 def jobs(conn, *args, **kw):
