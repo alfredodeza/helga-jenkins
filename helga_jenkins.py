@@ -32,6 +32,46 @@ def job_is_parametrized(job_info):
             return True
 
 
+def get_job_params(build_info):
+    """
+    A job info is a big dictionary blob and the parameters are tough to parse
+    because they are mixed in a series of lists and dictionaries, so we need to
+    do a few loops and ensure that the parameters for a given job are there
+    otherwise return a sensible default.
+
+    ``params`` live within the 'actions' key in ``job_info`` and it looks something
+    similar to::
+
+        [{u'causes': [{u'shortDescription': u'Started by GitHub push by ktdreyer'}]},
+         {},
+         {u'parameters': [{u'name': u'FORCE', u'value': False}]},
+         {},
+         {u'buildsByBranchName': {u'origin/master': {u'buildNumber': 155,
+            u'buildResult': None,
+            u'marked': {u'SHA1': u'dc331670463992addddb6f03aff364e61693c5f5',
+             u'branch': [{u'SHA1': u'dc331670463992addddb6f03aff364e61693c5f5',
+               u'name': u'origin/master'}]},
+            u'revision': {u'SHA1': u'dc331670463992addddb6f03aff364e61693c5f5',
+             u'branch': [{u'SHA1': u'dc331670463992addddb6f03aff364e61693c5f5',
+               u'name': u'origin/master'}]}}},
+          u'lastBuiltRevision': {u'SHA1': u'dc331670463992addddb6f03aff364e61693c5f5',
+           u'branch': [{u'SHA1': u'dc331670463992addddb6f03aff364e61693c5f5',
+             u'name': u'origin/master'}]},
+          u'remoteUrls': [u'https://github.com/ceph/ceph-build'],
+          u'scmName': u''},
+         {},
+         {},
+         {}]
+
+    """
+    actions = build_info.get('actions', [])
+    param_items = [i for i in actions if 'parameters' in i] or [{}]
+    params = param_items[0].get('parameters', [{}])[0]
+    if params:
+        return ' '.join(["%s=%s" % (k, v) for k, v in params.items()])
+    return ''
+
+
 def jobs(conn, *args, **kw):
     return conn.get_jobs()
 
@@ -47,19 +87,23 @@ def status(conn, *args, **kw):
     except NotFoundException:
         # use the previous one
         info = conn.get_build_info(name, build_number-1)
+    params = get_job_params(info)
+    param_string = 'params: {0}'.format(params) if params else ''
     if info['building']:
         # it is currently building so return a corresponding message
-        msg = 'BUILDING %s on server: %s url: %s' % (
+        msg = 'BUILDING %s on server: %s url: %s %s' % (
             name,
             info['builtOn'],
-            info['url']
+            info['url'],
+            param_string,
         )
     else:
-        msg = '%s for %s on server: %s url: %s' % (
+        msg = '%s for %s on server: %s url: %s %s' % (
             str(info['result']).upper(),
             name,
             info['builtOn'],
-            info['url']
+            info['url'],
+            param_string,
         )
 
     return msg
