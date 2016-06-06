@@ -329,6 +329,10 @@ def connect(credentials):
         password=credentials['password'],
     )
     connection.password = credentials['password']
+
+    # try an actual request so we can bail if something is off
+    connection.get_info()
+
     return connection
 
 
