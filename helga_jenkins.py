@@ -437,7 +437,7 @@ def parse_credentials(nick, arguments, instance=None):
     return parsed
 
 
-@command('jenkins', aliases=['ci'], help='Control Jenkins. See !jenkins help (or !ci help)', priority=0)
+@command('jenkins', aliases=['ci'], help='Control Jenkins. See !jenkins help (or !ci help)', priority=0, shlex=True)
 def helga_jenkins(client, channel, nick, message, cmd, args):
     instance = parse_instance(args)
     credentials = parse_credentials(nick, args, instance)
