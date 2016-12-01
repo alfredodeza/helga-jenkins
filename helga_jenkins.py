@@ -445,6 +445,17 @@ def helga_jenkins(client, channel, nick, message, cmd, args):
         conn = connect(credentials)
     except RuntimeError as error:
         return str(error)
+    except JenkinsException as error:
+        try:
+            nick_msg = "%s is probably unauthorized to connect to Jenkins as '%s'" % (nick, credentials['username'])
+        except KeyError:
+            nick_msg = "%s is not configured to connect to Jenkins" % nick
+        msg = [
+            nick_msg,
+            "An API token and matching IRC nick and Jenkins usernames are required",
+            "Error from Jenkins was: %s" % str(error)
+        ]
+        return msg
 
     sub_command = args[0]
     if len(args) == 1 and 'help' not in args:
