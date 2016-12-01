@@ -440,7 +440,16 @@ def parse_credentials(nick, arguments, instance=None):
 @command('jenkins', aliases=['ci'], help='Control Jenkins. See !jenkins help (or !ci help)', priority=0, shlex=True)
 def helga_jenkins(client, channel, nick, message, cmd, args):
     instance = parse_instance(args)
-    credentials = parse_credentials(nick, args, instance)
+    try:
+        credentials = parse_credentials(nick, args, instance)
+    except RuntimeError as error:
+        msg = [
+            "%s is improperly configured to connect to Jenkins" % nick,
+            "An API token and matching IRC nick and Jenkins usernames are required",
+            "Error from plugin was: %s" % str(error)
+        ]
+        return msg
+
     try:
         conn = connect(credentials)
     except RuntimeError as error:
